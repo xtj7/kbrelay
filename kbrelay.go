@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	forwardKeys := false
 
 	// find keyboard device, does not require a root permission
 	keyboard := keylogger.FindKeyboardDevice()
@@ -21,6 +22,11 @@ func main() {
 
 	events := k.Read()
 
+	enabledKeys := [256]bool{}
+	for i := 0; i < 255; i++ {
+		enabledKeys[0] = false
+	}
+
 	// range of events
 	for e := range events {
 		switch e.Type {
@@ -30,12 +36,19 @@ func main() {
 
 			// if the state of key is pressed
 			if e.KeyPress() {
-				logrus.Println("[event] press key ", e.KeyString())
+				logrus.Println("[event] press key ", e.KeyString(), e.Code)
+				enabledKeys[e.Code] = true
 			}
 
 			// if the state of key is released
 			if e.KeyRelease() {
-				logrus.Println("[event] release key ", e.KeyString())
+				logrus.Println("[event] release key ", e.KeyString(), e.Code)
+				enabledKeys[e.Code] = false
+			}
+
+			if enabledKeys[188] && enabledKeys[189] {
+				forwardKeys = !forwardKeys
+				logrus.Println("Changed forwardKeys to %v", forwardKeys)
 			}
 
 			break
