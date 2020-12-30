@@ -1,30 +1,43 @@
 package main
 
 import (
-	"fmt"
-	"github.com/eiannone/keyboard"
+	"github.com/MarinX/keylogger"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	keysEvents, err := keyboard.GetKeys(10)
+
+	// find keyboard device, does not require a root permission
+	keyboard := keylogger.FindKeyboardDevice()
+
+	logrus.Println("Found a keyboard at", keyboard)
+	// init keylogger with keyboard
+	k, err := keylogger.New(keyboard)
 	if err != nil {
-		panic(err)
+		logrus.Error(err)
+		return
 	}
-	defer func() {
-		_ = keyboard.Close()
-	}()
+	defer k.Close()
 
-	pressedKeys := []uint16{}
+	events := k.Read()
 
-	fmt.Println("Press ESC to quit")
-	for {
-		event := <-keysEvents
-		if event.Err != nil {
-			panic(event.Err)
-		}
-		fmt.Printf("You pressed: rune %q, key %X\r\n", event.Rune, event.Key)
+	// range of events
+	for e := range events {
+		switch e.Type {
+		// EvKey is used to describe state changes of keyboards, buttons, or other key-like devices.
+		// check the input_event.go for more events
+		case keylogger.EvKey:
 
-		if event.Key == keyboard.KeyF5 {
+			// if the state of key is pressed
+			if e.KeyPress() {
+				logrus.Println("[event] press key ", e.KeyString())
+			}
+
+			// if the state of key is released
+			if e.KeyRelease() {
+				logrus.Println("[event] release key ", e.KeyString())
+			}
+
 			break
 		}
 	}
