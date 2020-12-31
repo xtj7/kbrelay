@@ -101,15 +101,23 @@ func sendKeys(enabledKeys map[string]bool, f *os.File) {
 
 func isModifierKey(keyName string) bool {
 	// check if is modifier code
-	return false
+	_, ok := getModifierCodeForKey(keyName)
+	return ok
 }
 
 func getModifierCode(enabledKeys map[string]bool) int {
 	// iterate over all keys, check for modifier keys, return bit sum of all modifier keys
-	return 0
+	var returnModifierCode int = 0
+	for keyName, enabled := range enabledKeys {
+		if enabled && isModifierKey(keyName) {
+			modifierCode, _ := getModifierCodeForKey(keyName)
+			returnModifierCode += modifierCode
+		}
+	}
+	return returnModifierCode
 }
 
-func getModifierCodeForKey(keyName string) int {
+func getModifierCodeForKey(keyName string) (int, bool) {
 	m := make(map[string]int)
 	m["KEY_126"] = 0
 	m["R_ALT"] = 1
@@ -119,7 +127,9 @@ func getModifierCodeForKey(keyName string) int {
 	m["L_ALT"] = 16
 	m["L_SHIFT"] = 32
 	m["L_CTRL"] = 64
-	return m[keyName]
+
+	val, ok := m[keyName]
+	return val, ok
 }
 
 func keyCodeToScanCode(keyCode string) int {
@@ -165,6 +175,8 @@ func keyCodeToScanCode(keyCode string) int {
 	m["ESC"] = 0x29
 	m["TAB"] = 0x2b
 	m["SPACE"] = 0x2c
+	m[";"] = 0x33
+	m["'"] = 0x34
 	m[","] = 0x36
 	m["."] = 0x37
 
