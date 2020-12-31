@@ -22,6 +22,7 @@ var forwardKeys bool
 
 func main() {
 	debugEnabled = flag.Bool("debug", false, "Enables / disables debug mode")
+	flag.Parse()
 
 	setupCloseHandler()
 	go setupKeyboardHandlers()
