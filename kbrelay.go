@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"github.com/MarinX/keylogger"
 	"github.com/sirupsen/logrus"
@@ -15,10 +16,13 @@ type EnabledKey struct {
 	altKey  string
 }
 
+var debugEnabled *bool
 var enabledKeys map[string]EnabledKey
 var forwardKeys bool
 
 func main() {
+	debugEnabled = flag.Bool("debug", false, "Enables / disables debug mode")
+
 	setupCloseHandler()
 	go setupKeyboardHandlers()
 	dummyInputHandler()
@@ -74,7 +78,9 @@ func setupKeyboardHandlers() {
 
 			// if the state of key is pressed
 			if e.KeyPress() {
-				logrus.Println("[event] press key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
+				if *debugEnabled == true {
+					logrus.Println("[event] press key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
+				}
 				enabledKeys[keyString] = EnabledKey{
 					enabled: true,
 					altKey:  altKeyString,
@@ -83,7 +89,9 @@ func setupKeyboardHandlers() {
 
 			// if the state of key is released
 			if e.KeyRelease() {
-				logrus.Println("[event] release key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
+				if *debugEnabled == true {
+					logrus.Println("[event] release key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
+				}
 				enabledKeys[keyString] = EnabledKey{
 					enabled: false,
 					altKey:  altKeyString,
@@ -133,8 +141,8 @@ func sendKeys(enabledKeys map[string]EnabledKey, f *os.File) {
 	}
 
 	var buf bytes.Buffer
+	buf.WriteRune(rune(getModifierCode(enabledKeys)))
 	if len(keyList) > 0 {
-		buf.WriteRune(rune(getModifierCode(enabledKeys)))
 		buf.WriteRune(rune(0))
 		for i := 0; i < 6; i++ {
 			if i < len(keyList) {
@@ -145,7 +153,7 @@ func sendKeys(enabledKeys map[string]EnabledKey, f *os.File) {
 		}
 	} else {
 		// Release all keys
-		for i := 0; i < 8; i++ {
+		for i := 0; i < 7; i++ {
 			buf.WriteRune(rune(0))
 		}
 
@@ -234,6 +242,7 @@ func keyCodeToScanCode(keyCode string, altKeyCode string) int {
 	m["-"] = 0x2d
 	m["{"] = 0x2e
 	m["["] = 0x2f
+	m["]"] = 0x30
 	m["\\"] = 0x31
 	m["~"] = 0x32
 	m[";"] = 0x33
