@@ -46,13 +46,13 @@ func main() {
 
 			// if the state of key is pressed
 			if e.KeyPress() {
-				logrus.Println("[event] press key ", e.KeyString(), e.Code, e.Value)
+				logrus.Println("[event] press key ", keyString, e.Code, keyCodeToScanCode(keyString))
 				enabledKeys[keyString] = true
 			}
 
 			// if the state of key is released
 			if e.KeyRelease() {
-				logrus.Println("[event] release key ", e.KeyString(), e.Code, e.Value)
+				logrus.Println("[event] release key ", keyString, e.Code, keyCodeToScanCode(keyString))
 				enabledKeys[keyString] = false
 			}
 
@@ -160,6 +160,7 @@ func keyCodeToScanCode(keyCode string) int {
 	m["X"] = 27
 	m["Y"] = 28
 	m["Z"] = 29
+
 	m["1"] = 30
 	m["2"] = 31
 	m["3"] = 32
@@ -170,15 +171,79 @@ func keyCodeToScanCode(keyCode string) int {
 	m["8"] = 37
 	m["9"] = 38
 	m["0"] = 39
-	m["BS"] = 0x2a
+
 	m["ENTER"] = 0x28
 	m["ESC"] = 0x29
+	m["BS"] = 0x2a
 	m["TAB"] = 0x2b
 	m["SPACE"] = 0x2c
+	m["-"] = 0x2d
+	m["{"] = 0x2e
+	m["["] = 0x2f
+	m["\\"] = 0x31
+	m["~"] = 0x32
 	m[";"] = 0x33
 	m["'"] = 0x34
+	m["KEY_86"] = 0x35 // grave
 	m[","] = 0x36
 	m["."] = 0x37
+	m["/"] = 0x38
+	m["CAPS_LOCK"] = 0x39
+
+	m["F1"] = 0x3a
+	m["F2"] = 0x3b
+	m["F3"] = 0x3c
+	m["F4"] = 0x3d
+	m["F5"] = 0x3e
+	m["F6"] = 0x3f
+	m["F7"] = 0x40
+	m["F8"] = 0x41
+	m["F9"] = 0x42
+	m["F10"] = 0x43
+	m["F11"] = 0x44
+	m["F12"] = 0x45
+
+	m[""] = 0x46 // Print Screen
+	m[""] = 0x47 // Scroll Lock
+	m[""] = 0x48 // Pause
+	m[""] = 0x49 // Insert
+	m["Home"] = 0x4a
+	m["PgUp"] = 0x4b
+	m["Del"] = 0x4c
+	m["End"] = 0x4d
+	m["PgDn"] = 0x4e
+	m["Right"] = 0x4f
+	m["Left"] = 0x50
+	m["Down"] = 0x51
+	m["Up"] = 0x52
+
+	m["NUM_LOCK"] = 0x53
+	m[""] = 0x54 // KP Slash
+	m["*"] = 0x55 // KP *
+	m[""] = 0x56 // KP -
+	m[""] = 0x57 // KP +
+	m[""] = 0x58 // KP ENTER
+	m[""] = 0x59 // KP 1
+	m[""] = 0x5a // KP 2
+	m[""] = 0x5b // KP 3
+	m[""] = 0x5c // KP 4
+	m[""] = 0x5d // KP 5
+	m[""] = 0x5e // KP 6
+	m[""] = 0x5f // KP 7
+	m[""] = 0x60 // KP 8
+	m[""] = 0x61 // KP 9
+	m[""] = 0x62 // KP 0
+	m[""] = 0x63 // KP Dot/Delete
+
+	m["`"] = 0x64 // Key next to left shift
+
+	m["KEY_113"] = 0x7f // Mute
+	m["KEY_115"] = 0x80 // Volume Up
+	m["KEY_114"] = 0x81 // Volume Down
+	m["KEY_164"] = 0xe8 // Media: PlayPause
+	m["KEY_165"] = 0xea // Media: PreviousSong
+	m["KEY_163"] = 0xeb // Media: NextSong
+	m["KEY_161"] = 0xec // Media: EjectCD
 
 	return m[keyCode]
 }
