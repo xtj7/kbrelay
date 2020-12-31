@@ -10,7 +10,12 @@ import (
 	"syscall"
 )
 
-var enabledKeys map[string]bool
+type EnabledKey struct {
+	enabled bool
+	altKey  string
+}
+
+var enabledKeys map[string]EnabledKey
 var forwardKeys bool
 
 func main() {
@@ -46,7 +51,7 @@ func setupKeyboardHandlers() {
 
 	events := k.Read()
 
-	enabledKeys := make(map[string]bool)
+	enabledKeys := make(map[string]EnabledKey)
 
 	// open output
 	f, err := os.OpenFile("/dev/hidg0", os.O_WRONLY, 0644)
@@ -62,26 +67,33 @@ func setupKeyboardHandlers() {
 		// check the input_event.go for more events
 		case keylogger.EvKey:
 			var keyString = e.KeyString()
+			var altKeyString = fmt.Sprintf("KEY_%d", e.Code)
 			if keyString == "" {
-				keyString = fmt.Sprintf("KEY_%d", e.Code)
+				keyString = altKeyString
 			}
 
 			// if the state of key is pressed
 			if e.KeyPress() {
-				logrus.Println("[event] press key ", keyString, e.Code, keyCodeToScanCode(keyString))
-				enabledKeys[keyString] = true
+				logrus.Println("[event] press key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
+				enabledKeys[keyString] = EnabledKey{
+					enabled: true,
+					altKey:  altKeyString,
+				}
 			}
 
 			// if the state of key is released
 			if e.KeyRelease() {
-				logrus.Println("[event] release key ", keyString, e.Code, keyCodeToScanCode(keyString))
-				enabledKeys[keyString] = false
+				logrus.Println("[event] release key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
+				enabledKeys[keyString] = EnabledKey{
+					enabled: false,
+					altKey:  altKeyString,
+				}
 			}
 
-			if enabledKeys["KEY_188"] && enabledKeys["KEY_189"] {
+			if enabledKeys["KEY_188"].enabled && enabledKeys["KEY_189"].enabled {
 				forwardKeys = !forwardKeys
 				logrus.Println("Changed forwardKeys to", forwardKeys)
-				if enabledKeys["ESC"] {
+				if enabledKeys["ESC"].enabled {
 					os.Exit(0)
 				}
 			}
@@ -104,11 +116,19 @@ func setupCloseHandler() {
 	}()
 }
 
-func sendKeys(enabledKeys map[string]bool, f *os.File) {
-	keyList := []string{}
-	for keyName, enabled := range enabledKeys {
-		if enabled && !isModifierKey(keyName) {
-			keyList = append(keyList, keyName)
+type SendKeyType struct {
+	key    string
+	altKey string
+}
+
+func sendKeys(enabledKeys map[string]EnabledKey, f *os.File) {
+	var keyList []SendKeyType
+	for keyName, data := range enabledKeys {
+		if data.enabled && !isModifierKey(keyName) {
+			keyList = append(keyList, SendKeyType{
+				key:    keyName,
+				altKey: data.altKey,
+			})
 		}
 	}
 
@@ -118,7 +138,7 @@ func sendKeys(enabledKeys map[string]bool, f *os.File) {
 		buf.WriteRune(rune(0))
 		for i := 0; i < 6; i++ {
 			if i < len(keyList) {
-				buf.WriteRune(rune(keyCodeToScanCode(keyList[i])))
+				buf.WriteRune(rune(keyCodeToScanCode(keyList[i].key, keyList[i].altKey)))
 			} else {
 				buf.WriteRune(rune(0))
 			}
@@ -139,11 +159,11 @@ func isModifierKey(keyName string) bool {
 	return ok
 }
 
-func getModifierCode(enabledKeys map[string]bool) int {
+func getModifierCode(enabledKeys map[string]EnabledKey) int {
 	// iterate over all keys, check for modifier keys, return bit sum of all modifier keys
 	var returnModifierCode int = 0
-	for keyName, enabled := range enabledKeys {
-		if enabled && isModifierKey(keyName) {
+	for keyName, data := range enabledKeys {
+		if data.enabled && isModifierKey(keyName) {
 			modifierCode, _ := getModifierCodeForKey(keyName)
 			returnModifierCode += modifierCode
 		}
@@ -166,7 +186,7 @@ func getModifierCodeForKey(keyName string) (int, bool) {
 	return val, ok
 }
 
-func keyCodeToScanCode(keyCode string) int {
+func keyCodeToScanCode(keyCode string, altKeyCode string) int {
 	m := make(map[string]int)
 	m["A"] = 0x04
 	m["B"] = 0x05
@@ -251,25 +271,25 @@ func keyCodeToScanCode(keyCode string) int {
 	m["Down"] = 0x51
 	m["Up"] = 0x52
 
-	m["KEY_117"] = 0x51 // KP Equals
+	//m["KEY_117"] = 0x65 // KP Equals
 
 	m["NUM_LOCK"] = 0x53
-	m[""] = 0x54 // KP Slash
-	m["*"] = 0x55 // KP *
-	m[""] = 0x56 // KP -
-	m[""] = 0x57 // KP +
+	m["KEY_98"] = 0x54  // KP Slash
+	m["*"] = 0x55       // KP *
+	m["KEY_74"] = 0x56  // KP -
+	m["KEY_78"] = 0x57  // KP +
 	m["R_ENTER"] = 0x58 // KP ENTER
-	m[""] = 0x59 // KP 1
-	m[""] = 0x5a // KP 2
-	m[""] = 0x5b // KP 3
-	m[""] = 0x5c // KP 4
-	m[""] = 0x5d // KP 5
-	m[""] = 0x5e // KP 6
-	m[""] = 0x5f // KP 7
-	m[""] = 0x60 // KP 8
-	m[""] = 0x61 // KP 9
-	m[""] = 0x62 // KP 0
-	m[""] = 0x63 // KP Dot/Delete
+	m[""] = 0x59        // KP 1
+	m[""] = 0x5a        // KP 2
+	m[""] = 0x5b        // KP 3
+	m[""] = 0x5c        // KP 4
+	m[""] = 0x5d        // KP 5
+	m[""] = 0x5e        // KP 6
+	m[""] = 0x5f        // KP 7
+	m[""] = 0x60        // KP 8
+	m[""] = 0x61        // KP 9
+	m["KEY_82"] = 0x62  // KP 0
+	m["KEY_83"] = 0x63  // KP Dot/Delete
 
 	m["`"] = 0x64 // Key next to left shift
 
@@ -281,5 +301,9 @@ func keyCodeToScanCode(keyCode string) int {
 	m["KEY_163"] = 0xeb // Media: NextSong
 	m["KEY_161"] = 0xec // Media: EjectCD
 
-	return m[keyCode]
+	if val, ok := m[altKeyCode]; ok {
+		return val
+	} else {
+		return m[keyCode]
+	}
 }
