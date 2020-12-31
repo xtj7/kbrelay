@@ -28,7 +28,7 @@ func main() {
 	enabledKeys := make(map[string]bool)
 
 	// open output
-	f, err := os.OpenFile("/dev/hidg0", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("/dev/hidg0", os.O_WRONLY, 0644)
 	if err != nil {
 		logrus.Fatal(err)
 	}
