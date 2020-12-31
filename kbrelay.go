@@ -6,10 +6,31 @@ import (
 	"github.com/MarinX/keylogger"
 	"github.com/sirupsen/logrus"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
+var enabledKeys map[string]bool
+var forwardKeys bool
+
 func main() {
-	forwardKeys := false
+	setupCloseHandler()
+	go setupKeyboardHandlers()
+	dummyInputHandler()
+}
+
+func dummyInputHandler() {
+	// Throw away all input data
+	for {
+		var password string
+		fmt.Println("\033[8m") // Hide input
+		fmt.Scan(&password)
+		fmt.Println("\033[28m") // Show input
+	}
+}
+
+func setupKeyboardHandlers() {
+	forwardKeys = false
 
 	// find keyboard device, does not require a root permission
 	keyboard := keylogger.FindKeyboardDevice()
@@ -59,6 +80,9 @@ func main() {
 			if enabledKeys["KEY_188"] && enabledKeys["KEY_189"] {
 				forwardKeys = !forwardKeys
 				logrus.Println("Changed forwardKeys to", forwardKeys)
+				if enabledKeys["ESC"] {
+					os.Exit(0)
+				}
 			}
 
 			if forwardKeys {
@@ -68,6 +92,15 @@ func main() {
 			break
 		}
 	}
+}
+
+func setupCloseHandler() {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("\r- Ctrl+C pressed in Terminal")
+	}()
 }
 
 func sendKeys(enabledKeys map[string]bool, f *os.File) {
@@ -120,13 +153,13 @@ func getModifierCode(enabledKeys map[string]bool) int {
 func getModifierCodeForKey(keyName string) (int, bool) {
 	m := make(map[string]int)
 	m["KEY_126"] = 0
-	m["R_ALT"] = 1
+	m["R_CTRL"] = 1
 	m["R_SHIFT"] = 2
-	m["R_CTRL"] = 4
+	m["R_ALT"] = 4
 	m["KEY_125"] = 8
-	m["L_ALT"] = 16
+	m["L_CTRL"] = 16
 	m["L_SHIFT"] = 32
-	m["L_CTRL"] = 64
+	m["L_ALT"] = 64
 
 	val, ok := m[keyName]
 	return val, ok
