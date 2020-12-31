@@ -56,6 +56,7 @@ func setupKeyboardHandlers() {
 
 	// range of events
 	for e := range events {
+		//logrus.Println("Received event", e.Type, e.Code, e.Time)
 		switch e.Type {
 		// EvKey is used to describe state changes of keyboards, buttons, or other key-like devices.
 		// check the input_event.go for more events
@@ -250,12 +251,14 @@ func keyCodeToScanCode(keyCode string) int {
 	m["Down"] = 0x51
 	m["Up"] = 0x52
 
+	m["KEY_117"] = 0x51 // KP Equals
+
 	m["NUM_LOCK"] = 0x53
 	m[""] = 0x54 // KP Slash
 	m["*"] = 0x55 // KP *
 	m[""] = 0x56 // KP -
 	m[""] = 0x57 // KP +
-	m[""] = 0x58 // KP ENTER
+	m["R_ENTER"] = 0x58 // KP ENTER
 	m[""] = 0x59 // KP 1
 	m[""] = 0x5a // KP 2
 	m[""] = 0x5b // KP 3
