@@ -41,9 +41,9 @@ func main() {
 	handleFlags()
 	loadData()
 	setupCloseHandler()
-	dummyInputHandler()
 	printHelp()
-	setupKeyboardHandlers()
+	go setupKeyboardHandlers()
+	dummyInputHandler() // needs to be last as it is blocking
 }
 
 func handleFlags() {
@@ -63,18 +63,8 @@ func setupCloseHandler() {
 	go func() {
 		<-c
 		fmt.Println("\r- Ctrl+C pressed in Terminal, ignored. Use HOST KEYS + ESC to quit.")
-		os.Exit(0)
+		os.Exit(0) // todo: remove
 	}()
-}
-
-func dummyInputHandler() {
-	// Throw away all input data
-	for {
-		var password string
-		fmt.Println("\033[8m") // Hide input
-		fmt.Scan(&password)
-		fmt.Println("\033[28m") // Show input
-	}
 }
 
 func printHelp() {
@@ -164,6 +154,16 @@ func handleKeyEvent(e keylogger.InputEvent) {
 		}
 
 		break
+	}
+}
+
+func dummyInputHandler() {
+	// Throw away all input data
+	for {
+		var password string
+		fmt.Println("\033[8m") // Hide input
+		fmt.Scan(&password)
+		fmt.Println("\033[28m") // Show input
 	}
 }
 
