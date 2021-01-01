@@ -22,6 +22,7 @@ type EnabledKey struct {
 type KbMapData struct {
 	Keys map[string]int `json:"keys"`
 	Modifiers map[string]int `json:"modifiers"`
+	HostKeys []string `json:"hostKeys"`
 }
 
 var debugEnabled *bool
@@ -118,7 +119,7 @@ func handleKeyEvent(e keylogger.InputEvent) {
 			}
 		}
 
-		if enabledKeys["KEY_188"].enabled && enabledKeys["KEY_189"].enabled {
+		if hostKeysPressed() {
 			if enabledKeys["F"].enabled {
 				forwardKeys = !forwardKeys
 				logrus.Println("Changed forwardKeys to", forwardKeys)
@@ -137,12 +138,26 @@ func handleKeyEvent(e keylogger.InputEvent) {
 	}
 }
 
+func hostKeysPressed() bool {
+	if len(mapData.HostKeys) == 0 {
+		logrus.Errorln("No HostKeys defined in map file, exiting")
+		os.Exit(0)
+	}
+	for _, keyString := range mapData.HostKeys {
+		if !enabledKeys[keyString].enabled {
+			return false
+		}
+	}
+	return true
+}
+
 func setupCloseHandler() {
+	// Make sure not to close the application with Ctrl+C
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		fmt.Println("\r- Ctrl+C pressed in Terminal")
+		fmt.Println("\r- Ctrl+C pressed in Terminal, ignored. Use HOST KEYS + ESC to quit.")
 	}()
 }
 

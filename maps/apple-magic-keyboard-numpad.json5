@@ -123,5 +123,6 @@
     "L_CTRL": 16,
     "L_SHIFT": 32,
     "L_ALT": 64,
-  }
+  },
+  hostKeys: ["KEY_188", "KEY_189"],
 }
