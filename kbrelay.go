@@ -25,6 +25,11 @@ type KbMapData struct {
 	HostKeys []string `json:"hostKeys"`
 }
 
+type SendKeyType struct {
+	key    string
+	altKey string
+}
+
 var debugEnabled *bool
 var mapFile *string
 var enabledKeys map[string]EnabledKey
@@ -33,27 +38,32 @@ var mapData KbMapData
 var kbOutputFile *os.File
 
 func main() {
+	handleFlags()
+	loadData()
+	setupCloseHandler()
+	dummyInputHandler()
+	printHelp()
+	setupKeyboardHandlers()
+}
+
+func handleFlags() {
 	debugEnabled = flag.Bool("debug", false, "Enables / disables debug mode")
 	mapFile = flag.String("map", "./maps/apple-magic-keyboard-numpad.json5", "Path to map file")
 	flag.Parse()
-
-	loadData()
-	setupCloseHandler()
-	go setupKeyboardHandlers()
-	dummyInputHandler()
-	printHelp()
-}
-
-func printHelp() {
-	fmt.Println("### How to use ###")
-	fmt.Println("HOST KEYS + ESC\tquit")
-	fmt.Println("HOST KEYS + F\ttoggle forwardKeys")
-	fmt.Println("HOST KEYS + R\treload keys map")
-	fmt.Println("HOST KEYS + S\tsave keys map")
 }
 
 func loadData() {
 	mapData = loadKbMap(*mapFile)
+}
+
+func setupCloseHandler() {
+	// Make sure not to close the application with Ctrl+C
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("\r- Ctrl+C pressed in Terminal, ignored. Use HOST KEYS + ESC to quit.")
+	}()
 }
 
 func dummyInputHandler() {
@@ -64,6 +74,14 @@ func dummyInputHandler() {
 		fmt.Scan(&password)
 		fmt.Println("\033[28m") // Show input
 	}
+}
+
+func printHelp() {
+	fmt.Println("### How to use ###")
+	fmt.Println("HOST KEYS + ESC\tquit")
+	fmt.Println("HOST KEYS + F\ttoggle forwardKeys")
+	fmt.Println("HOST KEYS + R\treload keys map")
+	fmt.Println("HOST KEYS + S\tsave keys map")
 }
 
 func setupKeyboardHandlers() {
@@ -128,6 +146,7 @@ func handleKeyEvent(e keylogger.InputEvent) {
 			}
 		}
 
+		// react to special host key shortcuts or forward keys (if enabled)
 		if hostKeysPressed() {
 			if enabledKeys["F"].enabled {
 				forwardKeys = !forwardKeys
@@ -158,21 +177,6 @@ func hostKeysPressed() bool {
 		}
 	}
 	return true
-}
-
-func setupCloseHandler() {
-	// Make sure not to close the application with Ctrl+C
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		fmt.Println("\r- Ctrl+C pressed in Terminal, ignored. Use HOST KEYS + ESC to quit.")
-	}()
-}
-
-type SendKeyType struct {
-	key    string
-	altKey string
 }
 
 func sendKeys(enabledKeys map[string]EnabledKey) {
