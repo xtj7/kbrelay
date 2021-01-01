@@ -58,6 +58,7 @@ func dummyInputHandler() {
 
 func setupKeyboardHandlers() {
 	forwardKeys = false
+	enabledKeys = make(map[string]EnabledKey)
 
 	// find keyboard device, does not require a root permission
 	keyboard := keylogger.FindKeyboardDevice()
