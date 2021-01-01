@@ -172,12 +172,13 @@ func hostKeysPressed() bool {
 		logrus.Errorln("No HostKeys defined in map file, exiting")
 		os.Exit(0)
 	}
+	allKeysPressed := true
 	for _, keyString := range mapData.HostKeys {
 		if !enabledKeys[keyString].enabled {
-			return false
+			allKeysPressed = false
 		}
 	}
-	return true
+	return allKeysPressed
 }
 
 func sendKeys(enabledKeys map[string]EnabledKey) {
