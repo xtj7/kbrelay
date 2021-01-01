@@ -41,6 +41,15 @@ func main() {
 	setupCloseHandler()
 	go setupKeyboardHandlers()
 	dummyInputHandler()
+	printHelp()
+}
+
+func printHelp() {
+	fmt.Println("### How to use ###")
+	fmt.Println("HOST KEYS + ESC\tquit")
+	fmt.Println("HOST KEYS + F\ttoggle forwardKeys")
+	fmt.Println("HOST KEYS + R\treload keys map")
+	fmt.Println("HOST KEYS + S\tsave keys map")
 }
 
 func loadData() {
@@ -123,7 +132,7 @@ func handleKeyEvent(e keylogger.InputEvent) {
 			if enabledKeys["F"].enabled {
 				forwardKeys = !forwardKeys
 				logrus.Println("Changed forwardKeys to", forwardKeys)
-			} else if enabledKeys["L"].enabled {
+			} else if enabledKeys["R"].enabled {
 				loadData()
 			} else if enabledKeys["S"].enabled {
 				logrus.Println("Save data")
