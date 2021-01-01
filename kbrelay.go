@@ -114,15 +114,16 @@ func setupKeyboardHandlers() {
 			}
 
 			if enabledKeys["KEY_188"].enabled && enabledKeys["KEY_189"].enabled {
-				forwardKeys = !forwardKeys
-				logrus.Println("Changed forwardKeys to", forwardKeys)
-				if enabledKeys["ESC"].enabled {
+				if enabledKeys["F"].enabled {
+					forwardKeys = !forwardKeys
+					logrus.Println("Changed forwardKeys to", forwardKeys)
+				} else if enabledKeys["L"].enabled {
+					loadData()
+				} else if enabledKeys["S"].enabled {
+					logrus.Println("Save data")
+				} else if enabledKeys["ESC"].enabled {
 					os.Exit(0)
 				}
-			}
-
-			if enabledKeys["KEY_187"].enabled && enabledKeys["KEY_189"].enabled {
-				loadData()
 			}
 
 			if forwardKeys {
