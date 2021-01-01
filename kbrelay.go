@@ -25,12 +25,15 @@ type KbMapData struct {
 }
 
 var debugEnabled *bool
+var mapFile *string
 var enabledKeys map[string]EnabledKey
 var forwardKeys bool
 var mapData KbMapData
+var kbOutputFile *os.File
 
 func main() {
 	debugEnabled = flag.Bool("debug", false, "Enables / disables debug mode")
+	mapFile = flag.String("map", "./maps/apple-magic-keyboard-numpad.json5", "Path to map file")
 	flag.Parse()
 
 	loadData()
@@ -40,7 +43,7 @@ func main() {
 }
 
 func loadData() {
-	mapData = loadKbMap("./maps/apple-magic-keyboard-numpad.json5")
+	mapData = loadKbMap(*mapFile)
 }
 
 func dummyInputHandler() {
@@ -70,66 +73,65 @@ func setupKeyboardHandlers() {
 
 	events := k.Read()
 
-	enabledKeys := make(map[string]EnabledKey)
-
 	// open output
-	f, err := os.OpenFile("/dev/hidg0", os.O_WRONLY, 0644)
+	kbOutputFile, err = os.OpenFile("/dev/hidg0", os.O_WRONLY, 0644)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
 	// range of events
 	for e := range events {
-		//logrus.Println("Received event", e.Type, e.Code, e.Time)
-		switch e.Type {
-		// EvKey is used to describe state changes of keyboards, buttons, or other key-like devices.
-		// check the input_event.go for more events
-		case keylogger.EvKey:
-			var keyString = e.KeyString()
-			var altKeyString = fmt.Sprintf("KEY_%d", e.Code)
-			if keyString == "" {
-				keyString = altKeyString
-			}
+		handleKeyEvent(e)
+	}
+}
 
-			// if the state of key is pressed
-			if e.KeyPress() {
-				if *debugEnabled == true {
-					logrus.Println("[event] press key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
-				}
-				enabledKeys[keyString] = EnabledKey{
-					enabled: true,
-					altKey:  altKeyString,
-				}
-			}
-
-			// if the state of key is released
-			if e.KeyRelease() {
-				if *debugEnabled == true {
-					logrus.Println("[event] release key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
-				}
-				enabledKeys[keyString] = EnabledKey{
-					enabled: false,
-					altKey:  altKeyString,
-				}
-			}
-
-			if enabledKeys["KEY_188"].enabled && enabledKeys["KEY_189"].enabled {
-				if enabledKeys["F"].enabled {
-					forwardKeys = !forwardKeys
-					logrus.Println("Changed forwardKeys to", forwardKeys)
-				} else if enabledKeys["L"].enabled {
-					loadData()
-				} else if enabledKeys["S"].enabled {
-					logrus.Println("Save data")
-				} else if enabledKeys["ESC"].enabled {
-					os.Exit(0)
-				}
-			} else if forwardKeys {
-				sendKeys(enabledKeys, f)
-			}
-
-			break
+func handleKeyEvent(e keylogger.InputEvent) {
+	switch e.Type {
+	case keylogger.EvKey:
+		var keyString = e.KeyString()
+		var altKeyString = fmt.Sprintf("KEY_%d", e.Code)
+		if keyString == "" {
+			keyString = altKeyString
 		}
+
+		// if the state of key is pressed
+		if e.KeyPress() {
+			if *debugEnabled == true {
+				logrus.Println("[event] press key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
+			}
+			enabledKeys[keyString] = EnabledKey{
+				enabled: true,
+				altKey:  altKeyString,
+			}
+		}
+
+		// if the state of key is released
+		if e.KeyRelease() {
+			if *debugEnabled == true {
+				logrus.Println("[event] release key ", keyString, e.Code, keyCodeToScanCode(keyString, altKeyString))
+			}
+			enabledKeys[keyString] = EnabledKey{
+				enabled: false,
+				altKey:  altKeyString,
+			}
+		}
+
+		if enabledKeys["KEY_188"].enabled && enabledKeys["KEY_189"].enabled {
+			if enabledKeys["F"].enabled {
+				forwardKeys = !forwardKeys
+				logrus.Println("Changed forwardKeys to", forwardKeys)
+			} else if enabledKeys["L"].enabled {
+				loadData()
+			} else if enabledKeys["S"].enabled {
+				logrus.Println("Save data")
+			} else if enabledKeys["ESC"].enabled {
+				os.Exit(0)
+			}
+		} else if forwardKeys {
+			sendKeys(enabledKeys)
+		}
+
+		break
 	}
 }
 
@@ -147,7 +149,7 @@ type SendKeyType struct {
 	altKey string
 }
 
-func sendKeys(enabledKeys map[string]EnabledKey, f *os.File) {
+func sendKeys(enabledKeys map[string]EnabledKey) {
 	var keyList []SendKeyType
 	for keyName, data := range enabledKeys {
 		if data.enabled && !isModifierKey(keyName) {
@@ -176,7 +178,7 @@ func sendKeys(enabledKeys map[string]EnabledKey, f *os.File) {
 		}
 
 	}
-	buf.WriteTo(f)
+	buf.WriteTo(kbOutputFile)
 }
 
 func isModifierKey(keyName string) bool {
