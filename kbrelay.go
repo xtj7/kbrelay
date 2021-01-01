@@ -20,8 +20,8 @@ type EnabledKey struct {
 }
 
 type KbMapData struct {
-	keys map[string]int
-	modifiers map[string]int
+	Keys map[string]int `json:"keys"`
+	Modifiers map[string]int `json:"modifiers"`
 }
 
 var debugEnabled *bool
@@ -199,15 +199,15 @@ func getModifierCode(enabledKeys map[string]EnabledKey) int {
 }
 
 func getModifierCodeForKey(keyName string) (int, bool) {
-	val, ok := mapData.modifiers[keyName]
+	val, ok := mapData.Modifiers[keyName]
 	return val, ok
 }
 
 func keyCodeToScanCode(keyCode string, altKeyCode string) int {
-	if val, ok := mapData.keys[altKeyCode]; ok {
+	if val, ok := mapData.Keys[altKeyCode]; ok {
 		return val
 	} else {
-		return mapData.keys[keyCode]
+		return mapData.Keys[keyCode]
 	}
 }
 
