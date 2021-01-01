@@ -63,7 +63,6 @@ func setupCloseHandler() {
 	go func() {
 		<-c
 		fmt.Println("\r- Ctrl+C pressed in Terminal, ignored. Use HOST KEYS + ESC to quit.")
-		os.Exit(0) // todo: remove
 	}()
 }
 
