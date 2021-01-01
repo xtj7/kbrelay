@@ -214,14 +214,11 @@ func keyCodeToScanCode(keyCode string, altKeyCode string) int {
 func loadKbMap(fileName string) KbMapData {
 	absPath, _ := filepath.Abs(fileName)
 	jsonFile, err := os.Open(absPath)
-	// if we os.Open returns an error then handle it
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
-
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	fmt.Printf("Loaded config file %v\n", absPath)
@@ -230,6 +227,8 @@ func loadKbMap(fileName string) KbMapData {
 	if err := json5.Unmarshal(byteValue, &mapData); err != nil {
 		panic(err)
 	}
+
+	fmt.Printf("mapData: %v", mapData)
 
 	return mapData
 }
