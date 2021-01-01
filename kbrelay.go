@@ -124,9 +124,7 @@ func setupKeyboardHandlers() {
 				} else if enabledKeys["ESC"].enabled {
 					os.Exit(0)
 				}
-			}
-
-			if forwardKeys {
+			} else if forwardKeys {
 				sendKeys(enabledKeys, f)
 			}
 
@@ -228,8 +226,6 @@ func loadKbMap(fileName string) KbMapData {
 	if err := json5.Unmarshal(byteValue, &mapData); err != nil {
 		panic(err)
 	}
-
-	fmt.Printf("mapData: %v", mapData)
 
 	return mapData
 }
