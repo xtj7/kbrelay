@@ -78,6 +78,7 @@ func setupKeyboardHandlers() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	defer kbOutputFile.Close()
 
 	// range of events
 	for e := range events {
