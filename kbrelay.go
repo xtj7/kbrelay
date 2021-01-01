@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"github.com/MarinX/keylogger"
 	"github.com/sirupsen/logrus"
+	"github.com/rolldever/go-json5"
+	"io/ioutil"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 )
 
@@ -16,17 +19,28 @@ type EnabledKey struct {
 	altKey  string
 }
 
+type KbMapData struct {
+	keys map[string]int
+	modifiers map[string]int
+}
+
 var debugEnabled *bool
 var enabledKeys map[string]EnabledKey
 var forwardKeys bool
+var mapData KbMapData
 
 func main() {
 	debugEnabled = flag.Bool("debug", false, "Enables / disables debug mode")
 	flag.Parse()
 
+	loadData()
 	setupCloseHandler()
 	go setupKeyboardHandlers()
 	dummyInputHandler()
+}
+
+func loadData() {
+	mapData = loadKbMap("./maps/apple-magic-keyboard-numpad.json5")
 }
 
 func dummyInputHandler() {
@@ -107,6 +121,10 @@ func setupKeyboardHandlers() {
 				}
 			}
 
+			if enabledKeys["KEY_187"].enabled && enabledKeys["KEY_189"].enabled {
+				loadData()
+			}
+
 			if forwardKeys {
 				sendKeys(enabledKeys, f)
 			}
@@ -181,139 +199,37 @@ func getModifierCode(enabledKeys map[string]EnabledKey) int {
 }
 
 func getModifierCodeForKey(keyName string) (int, bool) {
-	m := make(map[string]int)
-	m["KEY_126"] = 0
-	m["R_CTRL"] = 1
-	m["R_SHIFT"] = 2
-	m["R_ALT"] = 4
-	m["KEY_125"] = 8
-	m["L_CTRL"] = 16
-	m["L_SHIFT"] = 32
-	m["L_ALT"] = 64
-
-	val, ok := m[keyName]
+	val, ok := mapData.modifiers[keyName]
 	return val, ok
 }
 
 func keyCodeToScanCode(keyCode string, altKeyCode string) int {
-	m := make(map[string]int)
-	m["A"] = 0x04
-	m["B"] = 0x05
-	m["C"] = 0x06
-	m["D"] = 0x07
-	m["E"] = 0x08
-	m["F"] = 0x09
-	m["G"] = 0x0a
-	m["H"] = 0x0b
-	m["I"] = 0x0c
-	m["J"] = 0x0d
-	m["K"] = 0x0e
-	m["L"] = 0x0f
-	m["M"] = 0x10
-	m["N"] = 0x11
-	m["O"] = 0x12
-	m["P"] = 0x13
-	m["Q"] = 0x14
-	m["R"] = 0x15
-	m["S"] = 0x16
-	m["T"] = 0x17
-	m["U"] = 0x18
-	m["V"] = 0x19
-	m["W"] = 0x1a
-	m["X"] = 0x1b
-	m["Y"] = 0x1c
-	m["Z"] = 0x1d
-
-	m["1"] = 0x1e
-	m["2"] = 0x1f
-	m["3"] = 0x20
-	m["4"] = 0x21
-	m["5"] = 0x22
-	m["6"] = 0x23
-	m["7"] = 0x24
-	m["8"] = 0x25
-	m["9"] = 0x26
-	m["0"] = 0x27
-
-	m["ENTER"] = 0x28
-	m["ESC"] = 0x29
-	m["BS"] = 0x2a
-	m["TAB"] = 0x2b
-	m["SPACE"] = 0x2c
-	m["-"] = 0x2d
-	m["{"] = 0x2e
-	m["["] = 0x2f
-	m["]"] = 0x30
-	m["\\"] = 0x31
-	m["~"] = 0x32
-	m[";"] = 0x33
-	m["'"] = 0x34
-	m["KEY_86"] = 0x35 // grave
-	m[","] = 0x36
-	m["."] = 0x37
-	m["/"] = 0x38
-	m["CAPS_LOCK"] = 0x39
-
-	m["F1"] = 0x3a
-	m["F2"] = 0x3b
-	m["F3"] = 0x3c
-	m["F4"] = 0x3d
-	m["F5"] = 0x3e
-	m["F6"] = 0x3f
-	m["F7"] = 0x40
-	m["F8"] = 0x41
-	m["F9"] = 0x42
-	m["F10"] = 0x43
-	m["F11"] = 0x44
-	m["F12"] = 0x45
-
-	m[""] = 0x46 // Print Screen
-	m[""] = 0x47 // Scroll Lock
-	m[""] = 0x48 // Pause
-	m[""] = 0x49 // Insert
-	m["Home"] = 0x4a
-	m["PgUp"] = 0x4b
-	m["Del"] = 0x4c
-	m["End"] = 0x4d
-	m["PgDn"] = 0x4e
-	m["Right"] = 0x4f
-	m["Left"] = 0x50
-	m["Down"] = 0x51
-	m["Up"] = 0x52
-
-	//m["KEY_117"] = 0x65 // KP Equals
-
-	m["NUM_LOCK"] = 0x53
-	m["KEY_98"] = 0x54  // KP Slash
-	m["*"] = 0x55       // KP *
-	m["KEY_74"] = 0x56  // KP -
-	m["KEY_78"] = 0x57  // KP +
-	m["R_ENTER"] = 0x58 // KP ENTER
-	m[""] = 0x59        // KP 1
-	m[""] = 0x5a        // KP 2
-	m[""] = 0x5b        // KP 3
-	m[""] = 0x5c        // KP 4
-	m[""] = 0x5d        // KP 5
-	m[""] = 0x5e        // KP 6
-	m[""] = 0x5f        // KP 7
-	m[""] = 0x60        // KP 8
-	m[""] = 0x61        // KP 9
-	m["KEY_82"] = 0x62  // KP 0
-	m["KEY_83"] = 0x63  // KP Dot/Delete
-
-	m["`"] = 0x64 // Key next to left shift
-
-	m["KEY_113"] = 0x7f // Mute
-	m["KEY_115"] = 0x80 // Volume Up
-	m["KEY_114"] = 0x81 // Volume Down
-	m["KEY_164"] = 0xe8 // Media: PlayPause
-	m["KEY_165"] = 0xea // Media: PreviousSong
-	m["KEY_163"] = 0xeb // Media: NextSong
-	m["KEY_161"] = 0xec // Media: EjectCD
-
-	if val, ok := m[altKeyCode]; ok {
+	if val, ok := mapData.keys[altKeyCode]; ok {
 		return val
 	} else {
-		return m[keyCode]
+		return mapData.keys[keyCode]
 	}
+}
+
+func loadKbMap(fileName string) KbMapData {
+	absPath, _ := filepath.Abs(fileName)
+	jsonFile, err := os.Open(absPath)
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	fmt.Printf("Loaded config file %v\n", absPath)
+
+	var mapData KbMapData
+	if err := json5.Unmarshal(byteValue, &mapData); err != nil {
+		panic(err)
+	}
+
+	return mapData
 }
