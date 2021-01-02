@@ -5,8 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/MarinX/keylogger"
-	"github.com/sirupsen/logrus"
 	"github.com/rolldever/go-json5"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -47,8 +47,13 @@ func main() {
 }
 
 func handleFlags() {
+	path, err := os.Executable()
+	if err != nil {
+		logrus.Println(err)
+	}
+
 	debugEnabled = flag.Bool("debug", false, "Enables / disables debug mode")
-	mapFile = flag.String("map", "./maps/apple-magic-keyboard-numpad.json5", "Path to map file")
+	mapFile = flag.String("map", filepath.Base(path) + "/maps/apple-magic-keyboard-numpad.json5", "Path to map file")
 	flag.Parse()
 }
 
