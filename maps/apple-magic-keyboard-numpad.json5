@@ -84,7 +84,7 @@
     "Down": 0x51,
     "Up": 0x52,
 
-    //"KEY_117": 0x65, // KP Equals
+    "KEY_117": 0x67, // KP Equals
 
     "NUM_LOCK": 0x53,
     "KEY_98": 0x54,  // KP Slash
@@ -106,13 +106,13 @@
 
     "`": 0x64, // Key next to left shift
 
+    "KEY_164": 0x7c, // Media: PlayPause
+    "KEY_165": 0x7d, // Media: PreviousSong
+    "KEY_163": 0x7e, // Media: NextSong,
     "KEY_113": 0x7f, // Mute
     "KEY_115": 0x80, // Volume Up
     "KEY_114": 0x81, // Volume Down
-    "KEY_164": 0xe8, // Media: PlayPause
-    "KEY_165": 0xea, // Media: PreviousSong
-    "KEY_163": 0xeb, // Media: NextSong
-    "KEY_161": 0xec, // Media: EjectCD
+    "KEY_161": 0xb8, // Media: EjectCD
   },
   modifiers: {
     "KEY_126": 0,
@@ -124,5 +124,6 @@
     "L_SHIFT": 32,
     "L_ALT": 64,
   },
+  // press these host keys together for performing actions, as outlined in the help when the application starts
   hostKeys: ["KEY_188", "KEY_189"],
 }
