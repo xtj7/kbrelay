@@ -1,2 +1,3 @@
 #!/bin/bash
-sudo python3 setup.py install
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+sudo python3 $DIR/setup.py install

@@ -53,7 +53,7 @@ func handleFlags() {
 	}
 
 	debugEnabled = flag.Bool("debug", false, "Enables / disables debug mode")
-	mapFile = flag.String("map", filepath.Base(path) + "/maps/apple-magic-keyboard-numpad.json5", "Path to map file")
+	mapFile = flag.String("map", filepath.Dir(path) + "/maps/apple-magic-keyboard-numpad.json5", "Path to map file")
 	flag.Parse()
 }
 
