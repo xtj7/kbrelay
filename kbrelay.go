@@ -85,13 +85,18 @@ func setupKeyboardHandlers() {
 
 	// find keyboard device, does not require a root permission
 	keyboard := keylogger.FindKeyboardDevice()
+	if keyboard != "" {
+		logrus.Println("Found a keyboard at", keyboard)
+	} else {
+		logrus.Println("No keyboard found, aborting")
+		os.Exit(1)
+	}
 
-	logrus.Println("Found a keyboard at", keyboard)
 	// init keylogger with keyboard
 	k, err := keylogger.New(keyboard)
 	if err != nil {
 		logrus.Error(err)
-		return
+		os.Exit(1)
 	}
 	defer k.Close()
 
@@ -101,6 +106,7 @@ func setupKeyboardHandlers() {
 	kbOutputFile, err = os.OpenFile("/dev/hidg0", os.O_WRONLY, 0644)
 	if err != nil {
 		logrus.Fatal(err)
+		os.Exit(1)
 	}
 	defer kbOutputFile.Close()
 
