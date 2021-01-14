@@ -30,6 +30,7 @@ type SendKeyType struct {
 	altKey string
 }
 
+var keyboardFound = false
 var debugEnabled *bool
 var mapFile *string
 var enabledKeys map[string]EnabledKey
@@ -67,6 +68,9 @@ func setupCloseHandler() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
+		if !keyboardFound {
+			os.Exit(0)
+		}
 		fmt.Println("\r- Ctrl+C pressed in Terminal, ignored. Use HOST KEYS + ESC to quit.")
 	}()
 }
@@ -87,6 +91,7 @@ func setupKeyboardHandlers() {
 	keyboard := keylogger.FindKeyboardDevice()
 	if keyboard != "" {
 		logrus.Println("Found a keyboard at", keyboard)
+		keyboardFound = true
 	} else {
 		logrus.Println("No keyboard found, aborting")
 		os.Exit(1)
@@ -114,6 +119,9 @@ func setupKeyboardHandlers() {
 	for e := range events {
 		handleKeyEvent(e)
 	}
+
+	// channel was closed
+	os.Exit(1)
 }
 
 func handleKeyEvent(e keylogger.InputEvent) {
