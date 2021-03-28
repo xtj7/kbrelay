@@ -87,7 +87,7 @@ func setupKeyboardHandlers() {
 	forwardKeys = false
 	enabledKeys = make(map[string]EnabledKey)
 
-	// find keyboard device, does not require a root permission
+	// find keyboard device, does not require root permission
 	keyboard := keylogger.FindKeyboardDevice()
 	if keyboard != "" {
 		logrus.Println("Found a keyboard at", keyboard)

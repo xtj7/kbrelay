@@ -115,11 +115,12 @@
     "KEY_161": 0xb8, // Media: EjectCD
   },
   modifiers: {
+    "KEY_125": 0,
     "KEY_126": 0,
     "R_CTRL": 1,
     "R_SHIFT": 2,
     "R_ALT": 4,
-    "KEY_125": 8,
+    //"": 8, // does not exist on apple keyboards
     "L_CTRL": 16,
     "L_SHIFT": 32,
     "L_ALT": 64,
