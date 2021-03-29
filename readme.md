@@ -26,13 +26,13 @@ If your KVM supports bluetooth out of the box, fantastic. Mine does not, so this
 
 ## Prerequisites
 
-You need to have go and python3 installed on your system. I think that's it.
+You need to have git, go and python3 installed on your system. I think that's it.
 
-To install `python` simply run:
+To install `python` and `git` simply run:
 
 ```
 sudo apt update
-sudo apt install python3 idle3
+sudo apt install python3 idle3 git
 ```
 
 To install `go` follow this guide:
@@ -43,7 +43,11 @@ this changes, let me know and I will update the guide.
 
 ## Installation
 
-1. Checkout this repo, ideally locally in `/home/pi/kbrelay` (makes the rest of the guide easier to follow)
+1. Checkout this repo, ideally locally in `/home/pi/kbrelay` (makes the rest of the guide easier to follow) by running
+   ```
+   cd ~
+   git clone git@github.com:xtj7/kbrelay.git
+   ```
 2. Switch to the repo directory and run `sudo ./install.sh`
 3. Run `sudo ./start.sh`
 
