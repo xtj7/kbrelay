@@ -115,6 +115,9 @@ func setupKeyboardHandlers() {
 	}
 	defer kbOutputFile.Close()
 
+	// everything seems great, now enable key forwarding
+	forwardKeys = true
+
 	// range of events
 	for e := range events {
 		handleKeyEvent(e)

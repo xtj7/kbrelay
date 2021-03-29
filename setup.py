@@ -1,3 +1,4 @@
+# This script was written by Kosci: https://koscis.wordpress.com/2018/11/23/raspberry-pi-as-usb-gadget-part-1/
 import os
 import sys
 import shutil
